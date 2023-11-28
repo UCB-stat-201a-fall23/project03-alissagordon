@@ -1,0 +1,112 @@
+---
+title: "hw12.4"
+output: word_document
+date: "2023-11-27"
+---
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+1. Simulation of Markov Process
+a.
+```{r}
+library(expm)
+matr=t(matrix(c(0.2,0.7,0.1,0.2,0.5,0.3,0.2,0.4,0.4),nrow=3,ncol=3))
+print(matr)
+
+```
+
+
+1b.
+```{r}
+currentstate=1
+update<- function(currentstate){
+  new=sample(c(1,2,3),1,prob=matr[currentstate,])
+  return(new)
+}
+update(currentstate)
+
+```
+
+
+
+2a. 
+```{r}
+values=eigen(t(matr))$values
+vectors=eigen(t(matr))$vectors
+print(values)
+#first eigenvalue is equal to 1
+#normalize corresponding eigenvector
+stationary=vectors[,1]/sum(vectors[,1])
+print(stationary)
+
+```
+
+
+
+2b. We can see that regardless of the initial probability distribution, the distributions converge to the stationary distribution.
+```{r}
+initial1=matrix(c(1,0,0),nrow=1)
+initial2=matrix(c(0,1,0),nrow=1)
+initial3=matrix(c(0,0,1),nrow=1)
+i=50
+norm1=c()
+norm2=c()
+norm3=c()
+for(j in 1:i){
+  new1=initial1%*%(matr%^%j)
+  norm1[j]=sqrt(sum((new1-stationary)^2))
+  new2=initial2%*%(matr%^%j)
+  norm2[j]=sqrt(sum((new2-stationary)^2))
+  new3=initial3%*%(matr%^%j)
+  norm3[j]=sqrt(sum((new3-stationary)^2))
+}
+i=seq(1,50,1)
+plot(i,norm1,col='red','l',log='y',xlab='iteration',ylab='Norm of Difference')
+lines(i,norm2)
+lines(i,norm3,col='blue')
+legend('right',legend=c('starting from state1','starting from state2', 'starting from state3'),col=c('red','black','blue'),lty = c(1,1,1))
+
+
+```
+  
+3a.
+```{r}
+set.seed(101)
+trials=10000
+counts1=c()
+for(i in 1:trials){
+state=1
+counter=0
+while(state!=3){
+  state=update(state)
+  counter=counter+1
+}
+counts1[i]=counter
+}
+counts2=c()
+for(i in 1:trials){
+state=2
+counter=0
+while(state!=3){
+  state=update(state)
+  counter=counter+1
+}
+counts2[i]=counter
+}
+mean1=mean(counts1)
+mean2=mean(counts2)
+hist(counts1)
+abline(v=mean1)
+hist(counts2,xlim=c(0,25))
+abline(v=mean2)
+#the histogram below shows the counts starting at state 2 in blue and starting at state1 in red.
+hist(counts2,col=rgb(0,0,1,1/4))
+hist(counts1,col=rgb(1,0,0,1/4),add=TRUE)
+abline(v=mean1,col=rgb(1,0,0,1))
+abline(v=mean2,col=rgb(0,0,1,1))
+
+print(mean1);print(mean2)
+```
+
+3b. The means computed theoretically are quite close to the means found in our simulations. The theoretical mean starting from 1 is 4.615 compared to the simulation mean of4.745 and the theoretical mean for 2 is 3.846 compared to the simulation mean of 3.851.
